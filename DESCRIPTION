@@ -1,0 +1,19 @@
+Package: dbData
+Type: Package
+Title: Database Access for Sufficient Statistics of Data Graphics
+Version: 0.1
+Date: 2012-04-18
+Author: Heike Hofmann, Susan Vanderplas
+Maintainer: Heike Hofmann <hofmann@iastate.edu>
+Description: Computes loss in x, y, and frequency due to data binning in x and
+    y. Functions include lossRandom, which uses bernoulli trials to assign data
+    to bins, and lossMean, which uses strict binning. Both functions will
+    return binned data as well as the loss due to binning.
+License: MIT
+Depends:
+    DBI,
+    RMySQL,
+    plyr
+Collate:
+    'lossfunctions.R'
+    'dbData.r'
