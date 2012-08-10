@@ -6,7 +6,7 @@
 #' probability equal to the distance between the bin's center and the point divided by the binning level. 
 #' Percent loss compares loss to the total sum of squares in the original data.
 #' 
-#' @param d1 data frames
+#' @param d1 data frame
 #' @param binning vector of binwidths
 #' @param newData binned data available?
 #' @export
