@@ -1,9 +1,14 @@
 library(ggplot2)
 library(gridExtra)
+<<<<<<< HEAD
 library(dbData)
 library(multicore)
 library(devtools)
 library(xtable)
+=======
+
+load("/home/susan/Dropbox/dbaccess/dbData/data/7-23-2012.RData")
+>>>>>>> 419430fe24997e47e7409e557fa8807d51dc5f20
 
 connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
                      password="R R0cks", port=3306, dbname="baseball", 
@@ -24,6 +29,7 @@ computeLoss <- function(binning, data){
   qplot(G, SO, fill = log10(Freq), geom="tile", data = lRandom$NewData, 
         main=paste("Random Binning (", binning[1], ", ", binning[2],")", sep="")) + 
         scale_fill_gradient2()
+<<<<<<< HEAD
   ggsave(paste("Random", binning[1], binning[2], ".png", sep=""), width=5, height=4.5, units="in")
   qplot(G, SO, fill = log10(Freq), geom="tile", data = lMean$NewData, 
         main=paste("Standard Binning (", binning[1], ", ", binning[2],")", sep="")) + 
@@ -52,3 +58,7 @@ print(tab, include.rownames=FALSE)
 tab <- xtable(LossTable[order(LossTable[,3], LossTable[,2]),], digits=c(0, 0, 0, 0,8, 8, 8))
 
 print(tab, include.rownames=FALSE)
+=======
+  ggsave(paste("Random", binning[1], binning[2], ".png", sep=""))
+}
+>>>>>>> 419430fe24997e47e7409e557fa8807d51dc5f20
