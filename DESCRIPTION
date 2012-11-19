@@ -16,4 +16,5 @@ Depends:
     plyr
 Collate:
     'lossfunctions.R'
+    'lossfunctions2.R'
     'dbData.r'
