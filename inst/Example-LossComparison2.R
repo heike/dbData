@@ -1,3 +1,5 @@
+library(dbData)
+library(ggplot2)
 connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
                      password="R R0cks", port=3306, dbname="baseball", 
                      host="headnode.stat.iastate.edu")
