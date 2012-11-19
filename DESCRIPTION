@@ -13,7 +13,8 @@ License: MIT
 Depends:
     DBI,
     RMySQL,
-    plyr
+    plyr,
+    ggplot2
 Collate:
     'lossfunctions.R'
     'lossfunctions2.R'
