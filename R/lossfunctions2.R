@@ -138,7 +138,7 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   
   Loss <- c(colSums(res[,(ncol(res)-(nl-2)):ncol(res)]), sum((log(dnew2$Freq) - log(dnew2$fsum)/dnew2$n)^2))
   names(Loss) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
-  
+  rm(list="dnew2")
   visLoss <- colSums(vloss[,1:(nl-1)])
   
   TSS <- as.data.frame(t(c(sapply(1:(nl-1), function(i) sum(data$Freq*(data[,i] - mean(data[,i]))^2)), sum((log(dnew$Freq)-mean(log(dnew$Freq)))^2))))
@@ -147,7 +147,8 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   dnew3 <- as.data.frame(cbind(do.call("rbind", lapply(strsplit(as.character(res$id), ".", fixed=TRUE), as.numeric)), res$fsum))
   names(dnew3) <- names(data[,1:(nl)])
   
-  LossAll <- c(Loss, visLoss, Loss+c(visLoss,0), TSS)
+  totalLoss <- Loss+c(visLoss,0)
+  LossAll <- data.frame(c(Loss, visLoss, totalLoss, TSS))
   names(LossAll) <- c(paste("NumLoss.", names(Loss), sep=""),
                       paste("VisLoss.", names(visLoss), sep=""),
                       paste("TotalLoss.", names(Loss), sep=""),

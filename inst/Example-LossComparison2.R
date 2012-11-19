@@ -18,13 +18,23 @@ d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(1,10))
 qplot(G,SO, fill=log10(Freq), data=d2, geom="tile")+
   scale_fill_gradient2()
 ## some more exploration of loss
-bins <- expand.grid(x=2*c(1:4), y=2*c(1:4)-1)
+bins <- expand.grid(x=1:10, y=1:10)
 
-lossesRdm <- mdply(bins, function(x,y) lossCalc(data=d1, binning=c(x, y)))
-lossesRdm <- mdply(bins, function(x,y) lossCalc(data=d1, binning=c(x, y), type="standard"))
-lossesRdm <- mclapply(1:nrow(bins), function(i) lossCalc(data=d1, binning=c(bins[i,1], bins[i,2])))
-lossesStd <- mclapply(1:nrow(bins), function(i) lossCalc(data=d1, binning=c(bins[i,1], bins[i,2]), type="standard"))
-qplot(x, percent.loss, group=y, data=losses, geom="line")
-qplot(y, percent.loss, group=x, data=losses, geom="line")
-d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(10,10))
+lossesRdm <- do.call("rbind", mclapply(1:nrow(bins), function(i) lossCalc(data=d1, binning=c(bins[i,1], bins[i,2]))))
+lossesStd <- do.call("rbind", mclapply(1:nrow(bins), function(i) lossCalc(data=d1, binning=c(bins[i,1], bins[i,2]), type="standard")))
+
+lossesRdm <- cbind(bins, lossesRdm)
+
+lossesStd <- cbind(bins, lossesStd)
+lossesStd$PctSO <- with(lossesStd,TotalLoss.SO/TSS.SO)
+lossesStd$PctG <-  with(lossesStd,TotalLoss.G/TSS.G)
+
+losses <- rbind(cbind(type="random", lossesRdm), cbind(type="standard", lossesStd))
+losses$PctSO <- with(losses,TotalLoss.SO/TSS.SO)
+losses$PctG <-  with(losses,TotalLoss.G/TSS.G)
+losses$PctFreq <- with(losses, TotalLoss.LogFreq/TSS.LogFreq)
+
+qplot(x=x, y=PctG, group=interaction(y, type), data=losses, geom="line", colour=type)
+qplot(x=y, y=PctSO, group=interaction(x, type), data=losses, geom="line", colour=type)
+qplot(x=x, y=PctFreq, group=interaction(y, type), data=losses, geom="line", colour=type)
                      
