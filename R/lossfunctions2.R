@@ -120,12 +120,12 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   mfun <- function(v){
     nl <- ncol(v)-1
     # Calculate EX
-    # t <- data.frame(t(sapply(1:(nl-1), function(i) sum(v[,i]*v[,nl])/sum(v[,nl])))) 
-    t <- data.frame(t(sapply(1:(nl-1), function(i) weighted.mean(v[,i], v[,nl]))))
+    t <- data.frame(t(sapply(1:(nl-1), function(i) sum(v[,i]*v[,nl])/sum(v[,nl])))) 
+    # t <- data.frame(t(sapply(1:(nl-1), function(i) weighted.mean(v[,i], v[,nl]))))
     t$fsum <- sum(v[,nl])
     # Calculate EX^2
-    # tsq <- data.frame(t(sapply(1:(nl-1), function(i) sum(v[,i]^2*v[,nl])/sum(v[,nl])))) 
-    tsq <- data.frame(t(sapply(1:(nl-1), function(i) weighted.mean(v[,i]^2, v[,nl]))))
+    tsq <- data.frame(t(sapply(1:(nl-1), function(i) sum(v[,i]^2*v[,nl])/sum(v[,nl])))) 
+    # tsq <- data.frame(t(sapply(1:(nl-1), function(i) weighted.mean(v[,i]^2, v[,nl]))))
     tsq <- tsq - t^2 # VarX = EX^2 - (EX)^2
     tsq <- tsq * t$fsum # Get SSQ from Freq
     names(t) <- c(names(v)[-c(nl, nl+1)], "fsum")
@@ -137,8 +137,8 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   }
   
   res <- ddply(data, .(id), mfun)
-  dnew2 <- merge(res, dnew[-c(1:(nl-1))], by="id")
-  
+  dnew2 <- merge(res, dnew[,-c(1:(nl-1))], by="id")
+
   TotalLoss <- colSums(total.loss[,1:(nl-1)])
   
   NumLoss <- c(colSums(res[,(ncol(res)-(nl-2)):ncol(res)]), sum((log(dnew2$Freq+1) - log((dnew2$fsum+1)/dnew2$n))^2))
@@ -150,7 +150,7 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   VisLoss <- TotalLoss[1:(nl-1)] - NumLoss
   
   
-  TSS <- as.data.frame(t(c(sapply(1:(nl-1), function(i) sum(data$Freq*(data[,i] - mean(data[,i]))^2)), 
+  TSS <- as.data.frame(t(c(sapply(1:(nl-1), function(i) sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
                            sum((log(dnew$Freq+1)-log(mean(dnew$Freq+1)))^2))))
   names(TSS) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
   
@@ -161,7 +161,7 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
 
   LossAll <- data.frame(c(NumLoss/TSS[1:2], VisLoss/TSS[1:2], TotalLoss/TSS))
   names(LossAll) <- c(paste("NumLoss.", names(NumLoss), sep=""),
-                      paste("VisLoss.", names(visLoss), sep=""),
+                      paste("VisLoss.", names(VisLoss), sep=""),
                       paste("TotalLoss.", names(TotalLoss), sep=""))
   if(newData)
     return(list(Loss=LossAll, NewData = dnew3))
