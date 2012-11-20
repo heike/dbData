@@ -1,3 +1,5 @@
+library(dbData)
+library(ggplot2)
 connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
                      password="R R0cks", port=3306, dbname="baseball", 
                      host="headnode.stat.iastate.edu")
@@ -18,23 +20,24 @@ d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(1,10))
 qplot(G,SO, fill=log10(Freq), data=d2, geom="tile")+
   scale_fill_gradient2()
 ## some more exploration of loss
-bins <- expand.grid(x=1:10, y=1:10)
+bins <- expand.grid(x=c(1:10, seq(15, 100, 5)), y=c(1:10, seq(15, 100, 5)))
 
+library(multicore)
 lossesRdm <- do.call("rbind", mclapply(1:nrow(bins), function(i) lossCalc(data=d1, binning=c(bins[i,1], bins[i,2]))))
 lossesStd <- do.call("rbind", mclapply(1:nrow(bins), function(i) lossCalc(data=d1, binning=c(bins[i,1], bins[i,2]), type="standard")))
 
 lossesRdm <- cbind(bins, lossesRdm)
-
 lossesStd <- cbind(bins, lossesStd)
-lossesStd$PctSO <- with(lossesStd,TotalLoss.SO/TSS.SO)
-lossesStd$PctG <-  with(lossesStd,TotalLoss.G/TSS.G)
 
 losses <- rbind(cbind(type="random", lossesRdm), cbind(type="standard", lossesStd))
-losses$PctSO <- with(losses,TotalLoss.SO/TSS.SO)
-losses$PctG <-  with(losses,TotalLoss.G/TSS.G)
-losses$PctFreq <- with(losses, TotalLoss.LogFreq/TSS.LogFreq)
+write.csv(losses, "/home/susan/Documents/R Projects/dbData/data/losses.csv", row.names=FALSE)
 
-qplot(x=x, y=PctG, group=interaction(y, type), data=losses, geom="line", colour=type)
-qplot(x=y, y=PctSO, group=interaction(x, type), data=losses, geom="line", colour=type)
-qplot(x=x, y=PctFreq, group=interaction(y, type), data=losses, geom="line", colour=type)
-                     
+
+qplot(x=x, y=TotalLoss.G, group=interaction(y, type), data=losses, geom="line", colour=type)
+qplot(x=y, y=TotalLoss.SO, group=interaction(x, type), data=losses, geom="line", colour=type)
+
+lossfreqdiff <- ddply(losses, .(x,y), summarise, diff = TotalLoss.LogFreq[type=="random"]-TotalLoss.LogFreq[type=="standard"])
+qplot(x=x, y=diff, group=y, data=lossfreqdiff, geom="line", colour=y) + 
+  scale_colour_gradient(low="#51A7EA", high="#132B43", trans="log") 
+# generally random has less frequency loss, but not always
+                    
