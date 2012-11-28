@@ -98,8 +98,12 @@ binRdm <- function(data, binning){
 #' d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(10,10))
 #' 
 lossCalc <- function(data, binning, type="random", newData=FALSE){
-  if(!"TRUE"%in%grepl("freq", tolower(names(data)), fixed=TRUE)) data$Freq <- 1
+#   browser()
+  if(sum(grepl("freq", tolower(names(data)), fixed=TRUE))==0) data$Freq <- 1
   nl <- ncol(data)
+  
+  data.old <- data
+  data <- ddply(data, c(1:(nl-1)), summarise, Freq=sum(Freq))
   
   if(type=="random"){dnew <- binRdm(data, binning)
   }else if(type=="standard"){dnew <- binStd(data, binning)
@@ -108,10 +112,11 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
     dnew <- binRdm(data, binning)
   }
   
+
   vars <- data*0
   names(vars) <- paste("Var", names(data), sep="")
 
-  data$id <- dnew$id <- interaction(dnew[,1:(nl-1)])
+  data$id <- dnew$id <- interaction(dnew[,1:(nl-1)], sep=".split.")
   total.loss <- as.data.frame(data$Freq*(data[,1:(nl-1)]-dnew[,1:(nl-1)])^2)
   names(total.loss) <- names(data)[1:(nl-1)]
   total.loss$id <- data$id
@@ -143,19 +148,19 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   
   NumLoss <- c(colSums(res[,(ncol(res)-(nl-2)):ncol(res)]), sum((log(dnew2$Freq+1) - log((dnew2$fsum+1)/dnew2$n))^2))
   names(NumLoss) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
-  rm(list="dnew2")
+#   rm(list="dnew2")
   TotalLoss <- c(TotalLoss, NumLoss[nl])
   NumLoss <- NumLoss[1:(nl-1)]
   
   VisLoss <- TotalLoss[1:(nl-1)] - NumLoss
   
-  
+  nbins <- prod(sapply(1:(nl-1), function(i) ceiling(diff(range(data[,i]))+1)/binning[i]))
   TSS <- as.data.frame(t(c(sapply(1:(nl-1), function(i) sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
-                           sum((log(dnew$Freq+1)-log(mean(dnew$Freq+1)))^2))))
+                           sum((log(dnew$Freq+1)-log(sum(dnew$Freq)/nbins))^2))))
   names(TSS) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
   
   if(newData){
-    dnew3 <- as.data.frame(cbind(do.call("rbind", lapply(strsplit(as.character(res$id), ".", fixed=TRUE), as.numeric)), res$fsum))
+    dnew3 <- as.data.frame(cbind(do.call("rbind", lapply(strsplit(as.character(res$id), ".split.", fixed=TRUE), as.numeric)), res$fsum))
     names(dnew3) <- names(data[,1:(nl)])
   }
 
@@ -164,6 +169,6 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
                       paste("VisLoss.", names(VisLoss), sep=""),
                       paste("TotalLoss.", names(TotalLoss), sep=""))
   if(newData)
-    return(list(Loss=LossAll, NewData = dnew3))
+    return(list(Loss=LossAll, NewData = dnew2[,c(2:(nl+1))]))
   else return(LossAll)
 }
