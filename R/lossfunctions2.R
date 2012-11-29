@@ -97,7 +97,7 @@ binRdm <- function(data, binning){
 #' qplot(y, percent.loss, group=x, data=losses, geom="line")
 #' d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(10,10))
 #' 
-lossCalc <- function(data, binning, type="random", newData=FALSE){
+lossCalc <- function(data, binning, type="standard", newData=FALSE){
 #   browser()
   if(sum(grepl("freq", tolower(names(data)), fixed=TRUE))==0) data$Freq <- 1
   nl <- ncol(data)
@@ -108,8 +108,8 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   if(type=="random"){dnew <- binRdm(data, binning)
   }else if(type=="standard"){dnew <- binStd(data, binning)
   }else{
-    warning("Type not 'standard' or 'random' - proceeding with random binning")
-    dnew <- binRdm(data, binning)
+    warning("Type not 'standard' or 'random' - proceeding with standard binning")
+    dnew <- binStd(data, binning)
   }
   
 
@@ -155,8 +155,10 @@ lossCalc <- function(data, binning, type="random", newData=FALSE){
   VisLoss <- TotalLoss[1:(nl-1)] - NumLoss
   
   nbins <- prod(sapply(1:(nl-1), function(i) ceiling(diff(range(data[,i]))+1)/binning[i]))
-  TSS <- as.data.frame(t(c(sapply(1:(nl-1), function(i) sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
-                           sum((log(dnew$Freq+1)-log(sum(dnew$Freq)/nbins))^2))))
+  TSS <- as.data.frame(t(c(
+    sapply(1:(nl-1), function(i) 
+      sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
+    sum((log(dnew$Freq+1)-log(sum(dnew$Freq)/nbins))^2))))
   names(TSS) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
   
   if(newData){
