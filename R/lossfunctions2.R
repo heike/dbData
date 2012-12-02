@@ -127,7 +127,7 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   }
   
   dmin <- ddply(dmin, c(1:(nl-1)), Freq=sum(Freq))
-  NumEmptyBins <- numMinimalBins-nrow(dmin)
+
   
   vars <- data*0
   names(vars) <- paste("Var", names(data), sep="")
@@ -164,7 +164,7 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   
   emptybinstop <- prod(binning)/prod(min.bin)
   NumLoss <- c(colSums(res[,(ncol(res)-(nl-2)):ncol(res)]), sum(
-      (log(dnew2$Freq+1) - log((dnew2$fsum+1)/emptybinstop))^2 +
+      (log(dnew2$Freq+1) - log((dnew2$fsum+1)/emptybinstop))^2) + sum(
       (emptybinstop-dnew2$n)*(log(dnew2$fsum+1)/emptybinstop)^2
     ))
   names(NumLoss) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
@@ -175,10 +175,11 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   VisLoss <- TotalLoss[1:(nl-1)] - NumLoss
   
   nbins <- prod(sapply(1:(nl-1), function(i) ceiling(diff(range(data[,i]))+1)/binning[i]))*emptybinstop
+  numEmptyBins <- nbins-nrow(dmin)
   TSS <- as.data.frame(t(c(
     sapply(1:(nl-1), function(i) 
       sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
-    sum((log(dnew$Freq+1)-log(sum(dnew$Freq)/nbins))^2)+NumEmptyBins*(log(sum(dnew$Freq)/nbins))^2)))
+    sum((log(dmin$Freq+1)-log(sum(dmin$Freq)/nbins))^2)+NumEmptyBins*(log(sum(dmin$Freq)/nbins))^2)))
   names(TSS) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
   
   if(newData){
