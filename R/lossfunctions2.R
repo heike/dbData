@@ -119,7 +119,7 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
     dnew <- binStd(data, binning)
   }
   
-  dmin <- ddply(binStd(data, min.bin), c(1:(nl-1)), summarise, Freq=sum(Freq))
+#  dmin <- ddply(binStd(data, min.bin), c(1:(nl-1)), summarise, Freq=sum(Freq))
   
   vars <- data*0
   names(vars) <- paste("Var", names(data), sep="")
@@ -155,12 +155,12 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   
   TotalLoss <- colSums(total.loss[,1:(nl-1)])
   
-  emptybinstop <- prod(binning)/prod(min.bin)
-  even.binning.prob <- sum(emptybinstop<dnew2$n)>0
-  
-  if(even.binning.prob){
-    emptybinstop <- apply(sapply(1:(nl-1), function(i) if(binning[i]%%2==0) binning[i] - ((dnew2[,i+1]%%binning[i]^2)>0) +((dnew2[,i+1]%%binning[i]^2)==0) else rep(binning[i], nrow(dnew))) , 1, prod)
-  }
+  emptybinstop <- max(prod(binning)/prod(min.bin), nrow(dnew2), max(dnew2$n))
+#   even.binning.prob <- sum(emptybinstop<dnew2$n)>0
+#   
+#   if(even.binning.prob){
+#     emptybinstop <- apply(sapply(1:(nl-1), function(i) if(binning[i]%%2==0) binning[i] - ((dnew2[,i+1]%%binning[i]^2)>0) +((dnew2[,i+1]%%binning[i]^2)==0) else rep(binning[i], nrow(dnew))) , 1, prod)
+#   }
   NumLoss <- c(colSums(res[,(ncol(res)-(nl-2)):ncol(res)]), sum(
     (log(dnew2$Freq+1) - log((dnew2$fsum+1)/emptybinstop))^2) + sum(
       (emptybinstop-dnew2$n)*(log(dnew2$fsum+1)/emptybinstop)^2
@@ -173,11 +173,11 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   VisLoss <- TotalLoss[1:(nl-1)] - NumLoss
   
   nbins <- prod(sapply(1:(nl-1), function(i) ceiling(diff(range(data[,i]))+1)/binning[i]))*emptybinstop
-  numEmptyBins <- nbins-nrow(dmin)
+  numEmptyBins <- nbins-nrow(data)
   TSS <- as.data.frame(t(c(
     sapply(1:(nl-1), function(i) 
       sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
-    sum((log(dmin$Freq+1)-log(sum(dmin$Freq)/nbins))^2)+numEmptyBins*(log(sum(dmin$Freq)/nbins))^2)))
+    sum((log(data$Freq+1)-log(sum(data$Freq)/nbins))^2)+sum(numEmptyBins*(log(sum(data$Freq)/nbins))^2))))
   names(TSS) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
   
   if(newData){
