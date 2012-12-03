@@ -177,7 +177,7 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   TSS <- as.data.frame(t(c(
     sapply(1:(nl-1), function(i) 
       sum(data$Freq*(data[,i] - weighted.mean(data[,i], data[,nl]))^2)), 
-    sum((log(dmin$Freq+1)-log(sum(dmin$Freq)/nbins))^2)+NumEmptyBins*(log(sum(dmin$Freq)/nbins))^2)))
+    sum((log(dmin$Freq+1)-log(sum(dmin$Freq)/nbins))^2)+numEmptyBins*(log(sum(dmin$Freq)/nbins))^2)))
   names(TSS) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
   
   if(newData){
