@@ -52,16 +52,16 @@ binStd <- function(data, binning){
 #' d1binned.reduced <- ddply(d1binned, .(G, SO), summarise, Freq=sum(Freq))
 #' qplot(G,SO, fill=log10(Freq), data=d1binned.reduced, geom="tile")+scale_fill_gradient2()
 binRdm <- function(data, binning){
-    dnew <- data
-    nl <- ncol(data)
-    if(length(binning) != nl)
-      binning <- rep(binning, length=nl-1)
-    for(x in 1:(nl-1)){
-      dnew[,x] <- binning[x]*(floor(data[,x]/binning[x]) + 
-                                sapply((data[,x]%%binning[x])/binning[x], 
-                                       function(p) rbinom(1, 1, p)))
-    }
-    return(dnew)
+  dnew <- data
+  nl <- ncol(data)
+  if(length(binning) != nl)
+    binning <- rep(binning, length=nl-1)
+  for(x in 1:(nl-1)){
+    dnew[,x] <- binning[x]*(floor(data[,x]/binning[x]) + 
+                              sapply((data[,x]%%binning[x])/binning[x], 
+                                     function(p) rbinom(1, 1, p)))
+  }
+  return(dnew)
 }
 
 #' Partitioned Loss function
@@ -98,7 +98,7 @@ binRdm <- function(data, binning){
 #' d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(10,10))
 #' 
 lossCalc <- function(data, binning, type="standard", newData=FALSE){
-#   browser()
+  #   browser()
   if(sum(grepl("freq", tolower(names(data)), fixed=TRUE))==0) data$Freq <- 1
   nl <- ncol(data)
   
@@ -119,19 +119,11 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
     dnew <- binStd(data, binning)
   }
   
-  if(type=="random"){dmin <- binRdm(data, min.bin)
-  }else if(type=="standard"){dmin <- binStd(data, min.bin)
-  }else{
-    warning("Type not 'standard' or 'random' - proceeding with standard binning")
-    dmin <- binStd(data, min.bin)
-  }
-  
-  dmin <- ddply(dmin, c(1:(nl-1)), Freq=sum(Freq))
-
+  dmin <- ddply(binStd(data, min.bin), c(1:(nl-1)), summarise, Freq=sum(Freq))
   
   vars <- data*0
   names(vars) <- paste("Var", names(data), sep="")
-
+  
   data$id <- dnew$id <- interaction(dnew[,1:(nl-1)], sep=".split.")
   total.loss <- as.data.frame(data$Freq*(data[,1:(nl-1)]-dnew[,1:(nl-1)])^2)
   names(total.loss) <- names(data)[1:(nl-1)]
@@ -158,17 +150,23 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
   }
   
   res <- ddply(data, .(id), mfun)
-  dnew2 <- merge(res, dnew[,-c(1:(nl-1))], by="id")
-
+  names(res) <- c(paste("recover", names(res)[1:(nl-1)], sep=""), names(res)[-c(1:(nl-1))])
+  dnew2 <- merge(dnew, res, by="id")
+  
   TotalLoss <- colSums(total.loss[,1:(nl-1)])
   
   emptybinstop <- prod(binning)/prod(min.bin)
+  even.binning.prob <- sum(emptybinstop<dnew2$n)>0
+  
+  if(even.binning.prob){
+    emptybinstop <- apply(sapply(1:(nl-1), function(i) if(binning[i]%%2==0) binning[i] - ((dnew2[,i+1]%%binning[i]^2)>0) +((dnew2[,i+1]%%binning[i]^2)==0) else rep(binning[i], nrow(dnew))) , 1, prod)
+  }
   NumLoss <- c(colSums(res[,(ncol(res)-(nl-2)):ncol(res)]), sum(
-      (log(dnew2$Freq+1) - log((dnew2$fsum+1)/emptybinstop))^2) + sum(
+    (log(dnew2$Freq+1) - log((dnew2$fsum+1)/emptybinstop))^2) + sum(
       (emptybinstop-dnew2$n)*(log(dnew2$fsum+1)/emptybinstop)^2
     ))
   names(NumLoss) <- paste(c("", "", "Log"), names(data[,-(nl+1)]), sep="")
-#   rm(list="dnew2")
+  #   rm(list="dnew2")
   TotalLoss <- c(TotalLoss, NumLoss[nl])
   NumLoss <- NumLoss[1:(nl-1)]
   
@@ -186,7 +184,7 @@ lossCalc <- function(data, binning, type="standard", newData=FALSE){
     dnew3 <- as.data.frame(cbind(do.call("rbind", lapply(strsplit(as.character(res$id), ".split.", fixed=TRUE), as.numeric)), res$fsum))
     names(dnew3) <- names(data[,1:(nl)])
   }
-
+  
   LossAll <- data.frame(c(NumLoss/TSS[1:2], VisLoss/TSS[1:2], TotalLoss/TSS))
   names(LossAll) <- c(paste("NumLoss.", names(NumLoss), sep=""),
                       paste("VisLoss.", names(VisLoss), sep=""),
