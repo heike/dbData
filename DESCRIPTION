@@ -1,8 +1,8 @@
 Package: dbData
 Type: Package
 Title: Database Access for Sufficient Statistics of Data Graphics
-Version: 0.1
-Date: 2012-04-18
+Version: 0.1.1
+Date: 2013-04-07
 Author: Heike Hofmann, Susan Vanderplas
 Maintainer: Heike Hofmann <hofmann@iastate.edu>
 Description: Computes loss in x, y, and frequency due to data binning in x and
@@ -13,9 +13,6 @@ License: MIT
 Depends:
     DBI,
     RMySQL,
+    MonetDB.R,
     plyr,
     ggplot2
-Collate:
-    'lossfunctions.R'
-    'lossfunctions2.R'
-    'dbData.r'

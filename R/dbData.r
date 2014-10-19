@@ -1,3 +1,8 @@
+#' union class to a database connection
+#' 
+#' A database connection can point to either a MySQL database or a Monet database.
+#' @export
+setClassUnion("dbConnection", c("MySQLConnection", "MonetDBConnection"))
 
 #' Wrapper class to a database object
 #'
@@ -6,7 +11,7 @@
 #' @export
 #' @rdname dataDB-methods
 
-setClass("dataDB", representation(co="MySQLConnection", 
+setClass("dataDB", representation(co="dbConnection", 
                                   table="character"))
 
 #' Method for dataDB object: retrieve first n rows from the data set
@@ -42,9 +47,8 @@ setMethod("names", "dataDB",
 #' @param where character string with conditional statement for SQL query
 #' @export
 #' @examples
-#' connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
-#' password="R R0cks", port=3306, dbname="baseball", 
-#' host="headnode.stat.iastate.edu")
+#' connect <- dbConnect(dbDriver("MySQL"), user="dbaccess", 
+#' port=3306, dbname="baseball", host="mysql2.stat.iastate.edu")
 #' pitch <- new("dataDB", co=connect, table="Pitching")
 #' names(pitch)
 #' head(pitch, n=10)[,1:8]
@@ -60,9 +64,9 @@ setMethod("names", "dataDB",
 #'   binwidth=c(10,50, -1), where="yearID > 1990"), facets=~yearID, geom="tile")
 #' 
 ## Not run:
-## connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
-## password="R R0cks", port=3306, dbname="data_expo_2009", 
-## host="headnode.stat.iastate.edu")
+## connect <- dbConnect(dbDriver("MySQL"), user="dbaccess", 
+## port=3306, dbname="data_expo_2009", 
+## host="mysql2.stat.iastate.edu")
 ## ontime <- new("dataDB", co=connect, table="ontime")
 ## qplot(DepTime, ArrDelay, data=dbData(ontime, list("DepTime","ArrDelay")))
 ## End(Not run)
@@ -102,9 +106,8 @@ dbData <- function(data, vars=list(), binwidth=-1, where = "") {
 #' @param margin logical value: should marginal distributions be considered or joint distribution?
 #' @export
 #' @examples
-#' connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
-#' password="R R0cks", port=3306, dbname="baseball", 
-#' host="headnode.stat.iastate.edu")
+#' connect <- dbConnect(dbDriver("MySQL"), user="dbaccess", 
+#' port=3306, dbname="baseball", host="mysql2.stat.iastate.edu")
 #' pitch <- new("dataDB", co=connect, table="Pitching")
 #' dbNBins(pitch, vars=list("G", "SO", "yearID"))
 #' dbNBins(pitch, vars=list("G", "SO", "yearID"), binwidth=c(10,10,1))
@@ -142,9 +145,8 @@ dbNBins <- function(data, vars=list(), binwidth=-1, margin=TRUE) {
 #' @param d2 data frame
 #' @export
 #' @examples
-#' connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
-#' password="R R0cks", port=3306, dbname="baseball", 
-#' host="headnode.stat.iastate.edu")
+#' connect <- dbConnect(dbDriver("MySQL"), user="dbaccess", 
+#' port=3306, dbname="baseball", host="mysql2.stat.iastate.edu")
 #' pitch <- new("dataDB", co=connect, table="Pitching")
 #' d1 <- dbData(pitch, vars=c( "G", "SO"))
 #' d2 <- dbData(pitch, vars=c( "G", "SO"), binwidth=c(2, 5))
@@ -207,9 +209,8 @@ loss <- function(d1, d2) {
 #' @param binning vector of binwidths
 #' @export
 #' @examples
-#' connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
-#' password="R R0cks", port=3306, dbname="baseball", 
-#' host="headnode.stat.iastate.edu")
+#' connect <- dbConnect(dbDriver("MySQL"), user="dbaccess", 
+#' port=3306, dbname="baseball", host="mysql2.stat.iastate.edu")
 #' pitch <- new("dataDB", co=connect, table="Pitching")
 #' d1 <- dbData(pitch, vars=c( "G", "SO"))
 #' qplot(G,SO, fill=log10(Freq), data=d1, geom="tile")+scale_fill_gradient2()
@@ -256,14 +257,9 @@ loss2 <- function(data, binning) {
 #' @export
 #' @rdname dataDB-methods
 #' @examples
-#' connect <- dbConnect(dbDriver("MySQL"), user="2009Expo", 
-#' password="R R0cks", port=3306, dbname="data_expo_2009", 
-#' host="headnode.stat.iastate.edu")
-#' 
-#' ontime <- new("dataDB", co=connect, table="ontime")
-#' dim(ontime)
-#' dim(new("dataDB", co=connect, table="weather"))
-
+#' connect <- dbConnect(dbDriver("MySQL"), user="dbaccess", 
+#' port=3306, dbname="baseball", host="mysql2.stat.iastate.edu")
+#'
 #' pitch <- new("dataDB", co=connect, table="Pitching")
 #' d1 <- dbData(pitch, vars=c( "G", "SO"))
 
